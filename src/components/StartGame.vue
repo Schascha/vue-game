@@ -1,49 +1,45 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
+import { getProperty, getTimeStamp, random } from '../helpers';
 
-// Variables
-const counter = ref(0);
-const distance = ref(0);
+/** Variables */
 const player = ref(null);
 const obstacles = ref([]);
 const obstaclesRefs = ref([]);
-const jump = ref(false);
-const gameOver = ref(false);
+const isGameOver = ref(false);
+const isJumping = ref(false);
+const jumpCount = ref(0);
+const distance = ref(0);
 const score = computed(() => String(distance.value).padStart(5, '0'));
 
-// Helpers
-const _getProperty = (el, value) => {
-  return (
-    el && parseInt(window?.getComputedStyle(el)?.getPropertyValue(value), 10)
-  );
-};
-
-const _random = (array) => {
-  return array[Math.floor(Math.random() * array.length)];
-};
-
+/** Mounted */
 onMounted(() => {
   // Keyevents
   window.addEventListener('keydown', ({ key }) => {
-    if (jump.value || gameOver.value) {
-      return;
+    // Enter
+    if (key === 'Enter' && isGameOver.value) {
+      replay();
     }
 
-    jump.value = key === 'ArrowUp';
-    window.setTimeout(() => {
-      if (!gameOver.value) {
-        jump.value = false;
-      }
-    }, 300);
+    // Jump
+    if (key === 'ArrowUp' && !isJumping.value && !isGameOver.value) {
+      jump();
+    }
   });
 
   // Update
   window.requestAnimationFrame(draw);
 });
 
+// Touch
+window.addEventListener('touchend', () => {
+  jump();
+});
+
+/** Methods */
 let i = 0;
 function draw() {
-  if (gameOver.value) {
+  if (isGameOver.value) {
     i = 0;
     return;
   }
@@ -55,13 +51,13 @@ function draw() {
   // Create obstacle
   if (
     obstacles.value.length === 0 ||
-    (i % 500 === 0 && obstacles.value.length < 3 && Math.random() < 0.5)
+    (i % 500 === 0 && obstacles.value.length < 3 && Math.random() < 0.85)
   ) {
     obstacles.value.push({
-      id: `obstacle-${new Date().getTime()}`,
-      height: _random([30, 40]),
-      width: _random([30, 20]),
-      color: _random(['#ffc188', '#02D1AC', '#0066ff', '#CC0078']),
+      id: `obstacle-${getTimeStamp()}`,
+      height: random([30, 40]),
+      width: random([30, 20]),
+      color: random(['#ffc188', '#02D1AC', '#0066ff', '#CC0078']),
     });
   }
 
@@ -76,38 +72,48 @@ function draw() {
       return;
     }
 
-    const bottom = _getProperty(player.value, 'bottom');
-    const width = _getProperty(player.value, 'width');
-    const elHeight = _getProperty(el, 'height');
-    const elLeft = _getProperty(el, 'left');
-    const elWidth = _getProperty(el, 'width');
-    const hasCollided = elLeft > 0 && elLeft <= width && elHeight > bottom;
-    const hasPassed = elLeft === elWidth * -1;
+    const playerBottom = getProperty(player.value, 'bottom');
+    const playerWidth = getProperty(player.value, 'width');
+    const elHeight = getProperty(el, 'height');
+    const elLeft = getProperty(el, 'left');
+    const elWidth = getProperty(el, 'width');
+    const hasPassed = elLeft === -elWidth;
+    const hasCollided =
+      elLeft > -elWidth && elLeft <= playerWidth && elHeight > playerBottom;
 
     // Collision
     if (hasCollided) {
-      gameOver.value = true;
+      isGameOver.value = true;
       return;
     }
 
     // Done
     if (hasPassed) {
-      counter.value++;
       obstaclesRefs.value.splice(elIndex, 1);
       obstacles.value.splice(index, 1);
+      jumpCount.value++;
     }
   });
 
   window.requestAnimationFrame(draw);
 }
 
+function jump() {
+  isJumping.value = true;
+  window.setTimeout(() => {
+    if (!isGameOver.value) {
+      isJumping.value = false;
+    }
+  }, 500);
+}
+
 function replay() {
-  gameOver.value = false;
   obstacles.value = [];
   obstaclesRefs.value = [];
-  counter.value = 0;
+  isGameOver.value = false;
+  isJumping.value = false;
   distance.value = 0;
-  jump.value = false;
+  jumpCount.value = 0;
   window.requestAnimationFrame(draw);
 }
 </script>
@@ -116,21 +122,25 @@ function replay() {
   <div class="highscore">
     <strong>Highscore</strong>
     <span>{{ score }}</span>
-    <span>({{ counter }})</span>
   </div>
   <div class="game">
-    <div class="gameOver" v-if="gameOver">
-      Game Over <button type="button" @click="replay">Restart</button>
+    <div class="isGameOver" v-if="isGameOver">
+      Game Over
+      <button type="button" @click="replay">Restart</button>
     </div>
-    <div ref="player" :class="['player', { jump: jump, freeze: gameOver }]" />
     <div
-      :ref="(el) => obstaclesRefs.push({ id: id, el: el })"
-      :class="['obstacle', { freeze: gameOver }]"
+      ref="player"
+      :class="['player', { jump: isJumping, freeze: isGameOver }]"
+    />
+    <div
+      :ref="(el) => obstaclesRefs.push({ id, el })"
+      :class="['obstacle', { freeze: isGameOver }]"
       v-for="{ id, height, width, color } of obstacles"
       :key="id"
       :style="`--width: ${width}px; --height: ${height}px; --color: ${color};`"
     />
   </div>
+  <span>Jumps: {{ jumpCount }}</span>
 </template>
 
 <style scoped>
@@ -163,7 +173,7 @@ function replay() {
 }
 
 .jump {
-  animation: jump 0.3s linear forwards;
+  animation: jump 1s ease forwards;
 }
 
 .freeze {
@@ -177,11 +187,22 @@ function replay() {
 }
 
 @keyframes jump {
-  40% {
+  0% {
+    transform: scale(1, 1);
+  }
+  10% {
+    transform: scale(1.1, 0.9);
+  }
+  30% {
+    transform: scale(0.9, 1.1);
     bottom: calc(var(--screen-height) / 2);
   }
-  65% {
-    bottom: calc(var(--screen-height) / 2);
+  50% {
+    transform: scale(1, 1);
+    bottom: 0;
+  }
+  100% {
+    transform: scale(1, 1);
   }
 }
 
