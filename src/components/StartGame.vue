@@ -154,11 +154,13 @@ function replay() {
 }
 
 .player {
+  animation: run 0.2s steps(2) infinite;
+  background: url('../assets/player.svg') no-repeat;
+  background-size: 100% auto;
   position: absolute;
   bottom: 0;
-  width: var(--player-width);
-  height: var(--player-height);
-  background-color: #000;
+  width: var(--player-width, 50px);
+  height: var(--player-height, 65px);
 }
 
 .obstacle {
@@ -188,27 +190,33 @@ function replay() {
 
 @keyframes jump {
   0% {
-    transform: scale(1, 1);
+    /* transform: scale(1, 1); */
   }
   10% {
-    transform: scale(1.1, 0.9);
+    /* transform: scale(1.1, 0.9); */
   }
   30% {
-    transform: scale(0.9, 1.1);
+    /* transform: scale(0.9, 1.1); */
     bottom: calc(var(--screen-height) / 2);
   }
   50% {
-    transform: scale(1, 1);
+    /* transform: scale(1, 1); */
     bottom: 0;
   }
   100% {
-    transform: scale(1, 1);
+    /* transform: scale(1, 1); */
   }
 }
 
 @keyframes move {
   to {
     left: calc(var(--width) * -1);
+  }
+}
+
+@keyframes run {
+  100% {
+    background-position: 0 -130px;
   }
 }
 </style>

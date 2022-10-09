@@ -1,8 +1,6 @@
 :root {
   --screen-width: 600px;
   --screen-height: 250px;
-  --player-width: 50px;
-  --player-height: 50px;
   --speed: 1500ms;
 }
 
