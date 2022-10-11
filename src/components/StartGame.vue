@@ -6,6 +6,7 @@ import { getProperty, getTimeStamp, random } from '../helpers';
 const player = ref(null);
 const obstacles = ref([]);
 const obstaclesRefs = ref([]);
+const isPaused = ref(true);
 const isGameOver = ref(false);
 const isJumping = ref(false);
 const jumpCount = ref(0);
@@ -17,18 +18,15 @@ onMounted(() => {
   // Keyevents
   window.addEventListener('keydown', ({ key }) => {
     // Enter
-    if (key === 'Enter' && isGameOver.value) {
-      replay();
+    if (key === 'Enter' && isPaused.value) {
+      play();
     }
 
     // Jump
-    if (key === 'ArrowUp' && !isJumping.value && !isGameOver.value) {
+    if (key === 'ArrowUp' && !isJumping.value && !isPaused.value) {
       jump();
     }
   });
-
-  // Update
-  window.requestAnimationFrame(draw);
 });
 
 // Touch
@@ -39,7 +37,7 @@ window.addEventListener('touchend', () => {
 /** Methods */
 let i = 0;
 function draw() {
-  if (isGameOver.value) {
+  if (isPaused.value) {
     i = 0;
     return;
   }
@@ -83,6 +81,7 @@ function draw() {
 
     // Collision
     if (hasCollided) {
+      isPaused.value = true;
       isGameOver.value = true;
       return;
     }
@@ -101,17 +100,18 @@ function draw() {
 function jump() {
   isJumping.value = true;
   window.setTimeout(() => {
-    if (!isGameOver.value) {
+    if (!isPaused.value) {
       isJumping.value = false;
     }
   }, 500);
 }
 
-function replay() {
+function play() {
   obstacles.value = [];
   obstaclesRefs.value = [];
   isGameOver.value = false;
   isJumping.value = false;
+  isPaused.value = false;
   distance.value = 0;
   jumpCount.value = 0;
   window.requestAnimationFrame(draw);
@@ -124,17 +124,22 @@ function replay() {
     <span>{{ score }}</span>
   </div>
   <div class="game">
-    <div class="isGameOver" v-if="isGameOver">
-      Game Over
-      <button type="button" @click="replay">Restart</button>
+    <div v-if="isPaused" class="center">
+      <template v-if="isGameOver">
+        Game Over
+        <button type="button" class="restart" @click="play">Restart</button>
+      </template>
+      <template v-else>
+        <button type="button" @click="play">Start</button>
+      </template>
     </div>
     <div
       ref="player"
-      :class="['player', { jump: isJumping, freeze: isGameOver }]"
+      :class="['player', { jump: isJumping, freeze: isPaused }]"
     />
     <div
       :ref="(el) => obstaclesRefs.push({ id, el })"
-      :class="['obstacle', { freeze: isGameOver }]"
+      :class="['obstacle', { freeze: isPaused }]"
       v-for="{ id, height, width, color } of obstacles"
       :key="id"
       :style="`--width: ${width}px; --height: ${height}px; --color: ${color};`"
@@ -176,6 +181,7 @@ function replay() {
 
 .jump {
   animation: jump 1s ease forwards;
+  background: url('../assets/player-jump.svg') no-repeat;
 }
 
 .freeze {
@@ -188,23 +194,20 @@ function replay() {
   gap: 10px;
 }
 
+.center {
+  transform: translate(-50%, -50%);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  text-align: center;
+}
+
 @keyframes jump {
-  0% {
-    /* transform: scale(1, 1); */
-  }
-  10% {
-    /* transform: scale(1.1, 0.9); */
-  }
   30% {
-    /* transform: scale(0.9, 1.1); */
     bottom: calc(var(--screen-height) / 2);
   }
   50% {
-    /* transform: scale(1, 1); */
     bottom: 0;
-  }
-  100% {
-    /* transform: scale(1, 1); */
   }
 }
 
