@@ -65,7 +65,7 @@ function draw() {
       id: `obstacle-${getTimeStamp()}`,
       height: random([30, 40]),
       width: random([30, 20]),
-      color: random(['#ffc188', '#02D1AC', '#0066ff', '#CC0078']),
+      color: 'var(--color-blue-base)',
     });
   }
 
@@ -87,7 +87,9 @@ function draw() {
     const elWidth = getProperty(el, 'width');
     const hasPassed = elLeft === -elWidth;
     const hasCollided =
-      elLeft > -elWidth && elLeft <= playerWidth && elHeight > playerBottom;
+      elLeft + elWidth > 15 &&
+      elLeft + 10 <= playerWidth &&
+      elHeight - 15 > playerBottom;
 
     // Collision
     if (hasCollided) {
