@@ -27,14 +27,18 @@ const formattedPlayTime = computed(() => {
 /** Mounted */
 onMounted(() => {
   // Keyevents
-  window.addEventListener('keydown', ({ key }) => {
+  window.addEventListener('keydown', ({ key, repeat }) => {
+    if (repeat) {
+      return;
+    }
+
     // Enter
     if (key === 'Enter' && isPaused.value) {
       play();
     }
 
     // Jump
-    if (key === 'ArrowUp' && !isJumping.value && !isPaused.value) {
+    if (key === 'ArrowUp') {
       jump();
     }
   });
@@ -53,14 +57,19 @@ function draw() {
     return;
   }
 
+  // Player position
+  const playerBottom = getProperty(player.value, 'bottom');
+  const playerWidth = getProperty(player.value, 'width');
+
   // Distance
   i++;
   i % 10 === 0 && distance.value++;
 
   // Create obstacle
   if (
-    obstacles.value.length === 0 ||
-    (i % 500 === 0 && obstacles.value.length < 3 && Math.random() < 0.85)
+    distance.value > 15 &&
+    (obstacles.value.length === 0 ||
+      (i % 250 === 0 && obstacles.value.length < 3 && Math.random() < 0.9))
   ) {
     obstacles.value.push({
       id: `obstacle-${getTimeStamp()}`,
@@ -81,8 +90,6 @@ function draw() {
       return;
     }
 
-    const playerBottom = getProperty(player.value, 'bottom');
-    const playerWidth = getProperty(player.value, 'width');
     const elHeight = getProperty(el, 'height');
     const elLeft = getProperty(el, 'left');
     const elWidth = getProperty(el, 'width');
@@ -113,6 +120,10 @@ function draw() {
 }
 
 function jump() {
+  if (isJumping.value || isPaused.value) {
+    return;
+  }
+
   isJumping.value = true;
   window.setTimeout(() => {
     if (!isPaused.value) {
