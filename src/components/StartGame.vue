@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { getProperty, getTimeStamp, random } from '../helpers';
+import IconReplay from '../assets/replay.svg?component';
 
 /** Variables */
 const player = ref(null);
@@ -11,7 +12,16 @@ const isGameOver = ref(false);
 const isJumping = ref(false);
 const jumpCount = ref(0);
 const distance = ref(0);
+const timer = ref(0);
+const playTime = ref(0);
 const score = computed(() => String(distance.value).padStart(5, '0'));
+const formattedPlayTime = computed(() => {
+  const minutes = Math.floor(playTime.value / 60);
+  const seconds = playTime.value % 60;
+  return `${minutes < 10 ? '0' : ''}${minutes}:${
+    seconds < 10 ? '0' : ''
+  }${seconds}`;
+});
 
 /** Mounted */
 onMounted(() => {
@@ -83,6 +93,7 @@ function draw() {
     if (hasCollided) {
       isPaused.value = true;
       isGameOver.value = true;
+      window.clearInterval(timer.value);
       return;
     }
 
@@ -114,20 +125,34 @@ function play() {
   isPaused.value = false;
   distance.value = 0;
   jumpCount.value = 0;
+  playTime.value = 0;
   window.requestAnimationFrame(draw);
+  timer.value = window.setInterval(() => playTime.value++, 1000);
 }
 </script>
 
 <template>
-  <div class="highscore">
-    <strong>Highscore</strong>
-    <span>{{ score }}</span>
-  </div>
   <div class="game">
+    <div class="bar">
+      <div>
+        <span>Zeit</span>
+        <strong>{{ formattedPlayTime }}</strong>
+      </div>
+      <div>
+        <span>Jumps</span>
+        <strong>{{ jumpCount }}</strong>
+      </div>
+      <div>
+        <span>Punkte</span>
+        <strong>{{ score }}</strong>
+      </div>
+    </div>
     <div v-if="isPaused" class="center">
       <template v-if="isGameOver">
-        Game Over
-        <button type="button" class="restart" @click="play">Restart</button>
+        Game Over<br />
+        <button type="button" class="restart" aria-label="Replay" @click="play">
+          <IconReplay width="16" height="16" />
+        </button>
       </template>
       <template v-else>
         <button type="button" @click="play">Start</button>
@@ -145,7 +170,6 @@ function play() {
       :style="`--width: ${width}px; --height: ${height}px; --color: ${color};`"
     />
   </div>
-  <span>Jumps: {{ jumpCount }}</span>
 </template>
 
 <style scoped>
@@ -154,7 +178,7 @@ function play() {
   position: relative;
   width: var(--screen-width);
   height: var(--screen-height);
-  border: 1px solid #f1f1f1;
+  background-color: var(--color-blue-light);
   margin: 0 auto;
 }
 
@@ -188,10 +212,42 @@ function play() {
   animation-play-state: paused;
 }
 
-.highscore {
+.bar {
+  transform: translate(-50%, 0);
+  position: absolute;
+  top: 0;
+  left: 50%;
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+  justify-content: center;
+  background-color: var(--color-white);
+  border-radius: 0 0 5px 5px;
+  text-align: center;
+}
+
+.bar div {
+  flex: 1 1 100%;
+  position: relative;
+  padding: 5px 20px;
+  width: 90px;
+}
+
+.bar div + div::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  border-left: 1px solid var(--color-grey-light);
+}
+
+.bar span {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.bar strong {
+  font-size: 0.875rem;
+  display: block;
 }
 
 .center {
