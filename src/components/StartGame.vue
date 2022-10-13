@@ -87,10 +87,11 @@ function draw() {
     const elLeft = getProperty(el, 'left');
     const elWidth = getProperty(el, 'width');
     const hasPassed = elLeft === -elWidth;
+    const offset = 10;
     const hasCollided =
-      elLeft + elWidth > 15 &&
-      elLeft + 10 <= playerWidth &&
-      elHeight - 15 > playerBottom;
+      elLeft + elWidth > offset &&
+      elLeft + offset <= playerWidth &&
+      elHeight - offset > playerBottom;
 
     // Collision
     if (hasCollided) {
@@ -188,7 +189,7 @@ function play() {
 .player {
   animation: run 0.2s steps(2) infinite;
   background: url('../assets/player.svg') no-repeat;
-  background-size: 100% auto;
+  background-size: 200% auto;
   position: absolute;
   bottom: 0;
   width: var(--player-width, 50px);
@@ -208,11 +209,12 @@ function play() {
 
 .jump {
   animation: jump 1s ease forwards;
-  background: url('../assets/player-jump.svg') no-repeat;
+  background-position: right top !important;
 }
 
 .freeze {
   animation-play-state: paused;
+  background-position: right bottom !important;
 }
 
 .center {
