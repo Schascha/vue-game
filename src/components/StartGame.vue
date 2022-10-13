@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { getProperty, getTimeStamp, random } from '../helpers';
+import GameBar from './GameBar.vue';
 import IconReplay from '../assets/replay.svg?component';
 
 /** Variables */
@@ -135,23 +136,13 @@ function play() {
 
 <template>
   <div class="game">
-    <div class="bar">
-      <div>
-        <span>Zeit</span>
-        <strong>{{ formattedPlayTime }}</strong>
-      </div>
-      <div>
-        <span>Jumps</span>
-        <strong>{{ jumpCount }}</strong>
-      </div>
-      <div>
-        <span>Punkte</span>
-        <strong>{{ score }}</strong>
-      </div>
-    </div>
+    <GameBar
+      :items="{ Zeit: formattedPlayTime, Jumps: jumpCount, Punkte: score }"
+    />
+
     <div v-if="isPaused" class="center">
       <template v-if="isGameOver">
-        Game Over<br />
+        <span>Game Over</span>
         <button type="button" class="restart" aria-label="Replay" @click="play">
           <IconReplay width="16" height="16" />
         </button>
@@ -160,17 +151,21 @@ function play() {
         <button type="button" @click="play">Start</button>
       </template>
     </div>
-    <div
-      ref="player"
-      :class="['player', { jump: isJumping, freeze: isPaused }]"
-    />
-    <div
-      :ref="(el) => obstaclesRefs.push({ id, el })"
-      :class="['obstacle', { freeze: isPaused }]"
-      v-for="{ id, height, width, color } of obstacles"
-      :key="id"
-      :style="`--width: ${width}px; --height: ${height}px; --color: ${color};`"
-    />
+
+    <div class="screen">
+      <div
+        ref="player"
+        :class="['player', { jump: isJumping, freeze: isPaused }]"
+      />
+
+      <div
+        v-for="{ id, height, width, color } of obstacles"
+        :ref="(el) => obstaclesRefs.push({ id, el })"
+        :key="id"
+        :class="['obstacle', { freeze: isPaused }]"
+        :style="`--width: ${width}px; --height: ${height}px; --color: ${color};`"
+      />
+    </div>
   </div>
 </template>
 
@@ -178,10 +173,16 @@ function play() {
 .game {
   overflow: hidden;
   position: relative;
+  max-width: var(--screen-width);
+  background-color: var(--color-blue-light);
+  border-bottom: 5px solid var(--color-blue-base);
+  border-radius: 5px;
+  margin: 0 auto;
+}
+
+.screen {
   width: var(--screen-width);
   height: var(--screen-height);
-  background-color: var(--color-blue-light);
-  margin: 0 auto;
 }
 
 .player {
@@ -214,50 +215,18 @@ function play() {
   animation-play-state: paused;
 }
 
-.bar {
-  transform: translate(-50%, 0);
-  position: absolute;
-  top: 0;
-  left: 50%;
-  display: flex;
-  justify-content: center;
-  background-color: var(--color-white);
-  border-radius: 0 0 5px 5px;
-  text-align: center;
-}
-
-.bar div {
-  flex: 1 1 100%;
-  position: relative;
-  padding: 5px 20px;
-  width: 90px;
-}
-
-.bar div + div::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 10px;
-  bottom: 10px;
-  border-left: 1px solid var(--color-grey-light);
-}
-
-.bar span {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-}
-
-.bar strong {
-  font-size: 0.875rem;
-  display: block;
-}
-
 .center {
   transform: translate(-50%, -50%);
   position: absolute;
   top: 50%;
   left: 50%;
   text-align: center;
+  text-transform: uppercase;
+}
+
+.center span {
+  display: block;
+  margin-bottom: 0.5rem;
 }
 
 @keyframes jump {
