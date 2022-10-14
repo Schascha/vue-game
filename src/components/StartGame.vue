@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { getProperty, getTimeStamp, random } from '../helpers';
 import GameBar from './GameBar.vue';
+import GameClouds from './GameClouds.vue';
 import IconReplay from '../assets/replay.svg?component';
 
 /** Variables */
@@ -148,6 +149,22 @@ function play() {
 
 <template>
   <div class="game">
+    <div class="screen">
+      <GameClouds :class="{ freeze: isPaused }" />
+      <div
+        ref="player"
+        :class="['player', { jump: isJumping, freeze: isPaused }]"
+      />
+
+      <div
+        v-for="{ id, height, width, color } of obstacles"
+        :ref="(el) => obstaclesRefs.push({ id, el })"
+        :key="id"
+        :class="['obstacle', { freeze: isPaused }]"
+        :style="`--width: ${width}px; --height: ${height}px; --color: ${color};`"
+      />
+    </div>
+
     <GameBar
       :items="{ Zeit: formattedPlayTime, Jumps: jumpCount, Punkte: score }"
     />
@@ -163,25 +180,10 @@ function play() {
         <button type="button" @click="play">Start</button>
       </template>
     </div>
-
-    <div class="screen">
-      <div
-        ref="player"
-        :class="['player', { jump: isJumping, freeze: isPaused }]"
-      />
-
-      <div
-        v-for="{ id, height, width, color } of obstacles"
-        :ref="(el) => obstaclesRefs.push({ id, el })"
-        :key="id"
-        :class="['obstacle', { freeze: isPaused }]"
-        :style="`--width: ${width}px; --height: ${height}px; --color: ${color};`"
-      />
-    </div>
   </div>
 </template>
 
-<style scoped>
+<style>
 .game {
   overflow: hidden;
   position: relative;
@@ -207,6 +209,10 @@ function play() {
   height: var(--player-height, 65px);
 }
 
+.player.freeze {
+  background-position: right bottom !important;
+}
+
 .obstacle {
   animation: move var(--speed) linear forwards;
   position: absolute;
@@ -224,8 +230,7 @@ function play() {
 }
 
 .freeze {
-  animation-play-state: paused;
-  background-position: right bottom !important;
+  animation-play-state: paused !important;
 }
 
 .center {
