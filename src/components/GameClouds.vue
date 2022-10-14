@@ -18,7 +18,7 @@
   position: absolute;
   top: var(--cloud-top);
   left: 100%;
-  background: var(--color-white);
+  background: var(--cloud-background);
   border-radius: 999em;
   height: var(--cloud-height);
   transform: scale(var(--cloud-scale));

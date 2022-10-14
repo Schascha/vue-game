@@ -12,6 +12,7 @@ const obstaclesRefs = ref([]);
 const isPaused = ref(true);
 const isGameOver = ref(false);
 const isJumping = ref(false);
+const isNight = ref(false);
 const jumpCount = ref(0);
 const distance = ref(0);
 const timer = ref(0);
@@ -66,6 +67,11 @@ function draw() {
   // Distance
   i++;
   i % 10 === 0 && distance.value++;
+
+  // Day-night change
+  if (i % 5000 === 4999) {
+    isNight.value = !isNight.value;
+  }
 
   // Create obstacle
   if (
@@ -159,7 +165,7 @@ function play() {
 </script>
 
 <template>
-  <div class="game">
+  <div :class="['game', { night: isNight }]">
     <div class="screen">
       <GameClouds :class="{ freeze: isPaused }" />
       <div
@@ -200,13 +206,20 @@ function play() {
 
 <style>
 .game {
+  transition: background 1s ease-out;
   overflow: hidden;
   position: relative;
   max-width: var(--screen-width);
-  background-color: var(--color-blue-light);
+  background-color: var(--screen-background);
   border-bottom: 5px solid var(--color-blue-base);
   border-radius: 5px;
   margin: 0 auto;
+}
+
+.night {
+  --cloud-background: var(--color-grey-dark);
+  --screen-background: var(--color-blue-dark);
+  --screen-color: var(--color-white);
 }
 
 .screen {
@@ -249,6 +262,7 @@ function play() {
 }
 
 .center {
+  color: var(--screen-color);
   transform: translate(-50%, -50%);
   position: absolute;
   top: 50%;
