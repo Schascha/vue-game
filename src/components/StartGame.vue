@@ -131,7 +131,10 @@ function collision() {
   window.clearInterval(timer.value);
 
   // Update highscore
-  if (parseInt(score.value, 10) > parseInt(highscore.value, 10)) {
+  if (
+    !highscore.value ||
+    parseInt(score.value, 10) > parseInt(highscore.value, 10)
+  ) {
     highscore.value = score.value;
     window.localStorage.setItem('highscore', `${highscore.value}`);
   }
