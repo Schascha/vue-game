@@ -16,6 +16,7 @@ const jumpCount = ref(0);
 const distance = ref(0);
 const timer = ref(0);
 const playTime = ref(0);
+const highscore = ref(window.localStorage.getItem('highscore'));
 const score = computed(() => String(distance.value).padStart(5, '0'));
 const formattedPlayTime = computed(() => {
   const minutes = Math.floor(playTime.value / 60);
@@ -103,9 +104,7 @@ function draw() {
 
     // Collision
     if (hasCollided) {
-      isPaused.value = true;
-      isGameOver.value = true;
-      window.clearInterval(timer.value);
+      collision();
       return;
     }
 
@@ -118,6 +117,18 @@ function draw() {
   });
 
   window.requestAnimationFrame(draw);
+}
+
+function collision() {
+  isPaused.value = true;
+  isGameOver.value = true;
+  window.clearInterval(timer.value);
+
+  // Update highscore
+  if (parseInt(score.value, 10) > parseInt(highscore.value, 10)) {
+    highscore.value = score.value;
+    window.localStorage.setItem('highscore', `${highscore.value}`);
+  }
 }
 
 function jump() {
@@ -180,6 +191,10 @@ function play() {
         <button type="button" @click="play">Start</button>
       </template>
     </div>
+  </div>
+  <div v-if="highscore" class="highscore">
+    <span>Highscore</span>
+    <strong>{{ highscore }}</strong>
   </div>
 </template>
 
@@ -245,6 +260,18 @@ function play() {
 .center span {
   display: block;
   margin-bottom: 0.5rem;
+}
+
+.highscore {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+.highscore span {
+  text-transform: uppercase;
 }
 
 @keyframes jump {
